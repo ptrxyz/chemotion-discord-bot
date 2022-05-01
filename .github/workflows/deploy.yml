@@ -1,0 +1,42 @@
+name: Deployment-Action
+on:
+  # push:
+  #   branches:
+  #     - main
+  release:
+    types: [published]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prepare ssh keys
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+
+      - name: Get latest release
+        uses: robinraju/release-downloader@v1.3
+        with:
+          repository: ${{github.repository}}
+          latest: true
+          tarBall: true
+
+      - name: Unzip latest release
+        run: |
+          ls -la *.tar.gz
+          tarball="$(ls *.tar.gz)"
+          tar -xvz --strip-components=1 -f "${tarball}"
+          rm "${tarball}"
+
+      - name: Grap .env
+        run: |
+          echo "${{ secrets.DOTENV }}" > .env
+
+      - name: Push to Server
+        run: |
+          eval "${{ secrets.DEPLOY_TARGET }}"
+          rsync -avz -e "ssh -p ${DEPLOY_PORT-22}" --exclude ".git/" --exclude ".github/" --exclude ".env.example" \
+          . ${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}
