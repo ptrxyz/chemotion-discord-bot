@@ -1,41 +1,41 @@
-import 'dotenv/config'
-import { REST } from '@discordjs/rest'
-import { Routes } from 'discord-api-types/v9'
+import "dotenv/config"
+import { REST } from "@discordjs/rest"
+import { Routes } from "discord-api-types/v9"
 
-import { SlashCommandBuilder } from '@discordjs/builders'
+import { SlashCommandBuilder } from "@discordjs/builders"
 import {
     MessageActionRow,
     MessageMentions,
     MessageSelectMenu,
-} from 'discord.js'
+} from "discord.js"
 
-import { setTimeout as wait } from 'node:timers/promises'
+import { setTimeout as wait } from "node:timers/promises"
 
-import { generateRoomWithoutSeparator } from './lib/random/index.js'
+import { generateRoomWithoutSeparator } from "./lib/random/index.js"
 
 const command = new SlashCommandBuilder()
-    .setName('hideout')
-    .setDescription('Create a private chat room.')
+    .setName("hideout")
+    .setDescription("Create a private chat room.")
     .addStringOption((option) =>
         option
-            .setName('people')
+            .setName("people")
             .setDescription(
-                'Additional people to give access to this chat room (use @-notation).'
+                "Additional people to give access to this chat room (use @-notation)."
             )
     )
 const commands = [
     {
-        name: 'ping',
-        description: 'Replies with Pong!',
+        name: "ping",
+        description: "Replies with Pong!",
     },
 ]
 commands.push(command.toJSON())
 
-const rest = new REST({ version: '9' }).setToken(process.env.DISCORD_TOKEN)
+const rest = new REST({ version: "9" }).setToken(process.env.DISCORD_TOKEN)
 
 ;(async () => {
     try {
-        console.log('Started refreshing application (/) commands.')
+        console.log("Started refreshing application (/) commands.")
 
         await rest.put(
             Routes.applicationGuildCommands(
@@ -45,14 +45,14 @@ const rest = new REST({ version: '9' }).setToken(process.env.DISCORD_TOKEN)
             { body: commands }
         )
 
-        console.log('Successfully reloaded application (/) commands.')
+        console.log("Successfully reloaded application (/) commands.")
     } catch (error) {
         console.error(error)
     }
 })()
 
-import { Client, Intents } from 'discord.js'
-import { Permissions } from 'discord.js'
+import { Client, Intents } from "discord.js"
+import { Permissions } from "discord.js"
 
 const client = new Client({
     intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MEMBERS],
@@ -93,13 +93,13 @@ async function createRoom(interaction, channelName, ownerID, otherIDs) {
     ])
 
     let channel = await guild.channels.create(channelName, {
-        type: 'GUILD_TEXT',
-        reason: 'Created a cool new channel upon request.',
+        type: "GUILD_TEXT",
+        reason: "Created a cool new channel upon request.",
         permissionOverwrites: permissions,
     })
 
     let category = guild.channels.cache.find(
-        (c) => c.name == 'Group Chats' && c.type == 'GUILD_CATEGORY'
+        (c) => c.name == "Group Chats" && c.type == "GUILD_CATEGORY"
     )
 
     if (category && channel) {
@@ -107,43 +107,43 @@ async function createRoom(interaction, channelName, ownerID, otherIDs) {
     }
 }
 
-client.on('ready', () => {
+client.on("ready", () => {
     console.log(`Logged in as ${client.user.tag}!`)
 })
 
-client.on('message', async (message) => {
+client.on("message", async (message) => {
     console.log(message)
 })
 
-client.on('interactionCreate', (interaction) => {
+client.on("interactionCreate", (interaction) => {
     if (!interaction.isSelectMenu()) return
-    if (interaction.customId == 'selection') {
+    if (interaction.customId == "selection") {
         interaction.update({
-            content: 'cool.',
+            content: "cool.",
             components: [],
             ephemeral: true,
         })
     }
 })
 
-client.on('interactionCreate', async (interaction) => {
+client.on("interactionCreate", async (interaction) => {
     if (!interaction.isCommand()) {
         return
     }
 
-    if (interaction.commandName === 'ping') {
-        await interaction.reply('Your mom!')
-    } else if (interaction.commandName === 'hideout') {
+    if (interaction.commandName === "ping") {
+        await interaction.reply("Your mom!")
+    } else if (interaction.commandName === "hideout") {
         let guild = interaction.guild
 
-        const param = interaction.options.getString('people')?.trim() || ''
+        const param = interaction.options.getString("people")?.trim() || ""
         let selectedIDs = getUserFromMention(param)
 
         if (selectedIDs.length < 1) {
             if (param.length > 0) {
                 // option was passed but it's not IDs
                 await interaction.reply({
-                    content: 'Please use @-notation to select people.',
+                    content: "Please use @-notation to select people.",
                     components: [],
                     ephemeral: true,
                 })
@@ -166,21 +166,21 @@ client.on('interactionCreate', async (interaction) => {
 
                 const row = new MessageActionRow().addComponents(
                     new MessageSelectMenu()
-                        .setCustomId('selection')
-                        .setPlaceholder('Nothing selected')
+                        .setCustomId("selection")
+                        .setPlaceholder("Nothing selected")
                         .setMaxValues(Math.min(25, options.length))
                         .addOptions(options)
                 )
 
                 await interaction.reply({
-                    content: 'Select the people you want to talk to.',
+                    content: "Select the people you want to talk to.",
                     components: [row],
                     ephemeral: true,
                 })
 
                 const message = await interaction.fetchReply()
                 const filter = (newInteraction) =>
-                    newInteraction.customId === 'selection' &&
+                    newInteraction.customId === "selection" &&
                     newInteraction.user.id === interaction.user.id
 
                 try {
@@ -189,13 +189,13 @@ client.on('interactionCreate', async (interaction) => {
                         time: 60000,
                     })
                     if (newInteraction.values.length == 0) {
-                        throw 'Nothing selected.'
+                        throw "Nothing selected."
                     } else {
                         selectedIDs = newInteraction.values
                     }
                 } catch {
                     interaction.editReply({
-                        content: 'Nothing selected.',
+                        content: "Nothing selected.",
                         components: [],
                         ephemeral: true,
                     })
