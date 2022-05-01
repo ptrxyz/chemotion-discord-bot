@@ -40,3 +40,9 @@ jobs:
           eval "${{ secrets.DEPLOY_TARGET }}"
           rsync -avz -e "ssh -p ${DEPLOY_PORT-22}" --exclude ".git/" --exclude ".github/" --exclude ".env.example" \
           . ${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}
+
+      - name: Restart Server
+        run: |
+          eval "${{ secrets.DEPLOY_TARGET }}"
+          ssh -p ${DEPLOY_PORT-2} ${DEPLOY_USER}@${DEPLOY_HOST} bash -c \
+          "cd ${DEPLOY_PATH}/.. && docker-compose build && docker-compose stop --remove-orphans && docker-compose up -d"
